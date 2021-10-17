@@ -131,14 +131,14 @@ def main():
     # cudnn.benchmark = True
 
     # Data loading
-    train_dataset = ImageNetDataset(args.data + '/img', args.data + '/train_0.txt')
-    val_dataset = ImageNetDataset(args.data + '/img', args.data + '/val_0.txt')
+    train_dataset = ImageNetDataset(args.data + '/img', args.data + '/train_all.txt')
+    #val_dataset = ImageNetDataset(args.data + '/img', args.data + '/val_0.txt')
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
+    #val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
-    if args.evaluate:
-        validate(val_loader, model, criterion, args.print_freq)
-        return
+    # if args.evaluate:
+    #     validate(val_loader, model, criterion, args.print_freq)
+    #     return
 
     for epoch in range(args.start_epoch, args.epochs):
         adjust_learning_rate(optimizer, epoch, args.lr)
@@ -147,11 +147,11 @@ def main():
         train(train_loader, model, criterion, optimizer, epoch, args.print_freq)
 
         # evaluate on validation set
-        prec1, prec5 = validate(val_loader, model, criterion, args.print_freq)
+        #prec1, prec5 = validate(val_loader, model, criterion, args.print_freq)
 
         # remember the best prec@1 and save checkpoint
-        is_best = prec1 > best_prec1
-        best_prec1 = max(prec1, best_prec1)
+        #is_best = prec1 > best_prec1
+        #best_prec1 = max(prec1, best_prec1)
 
         save_checkpoint({
             'epoch': epoch + 1,
@@ -159,7 +159,7 @@ def main():
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
             'optimizer': optimizer.state_dict()
-        }, is_best, args.arch + '.pth')
+        }, False, args.arch + '.pth')
 
 
 def train(train_loader, model, criterion, optimizer, epoch, print_freq):
@@ -174,24 +174,32 @@ def train(train_loader, model, criterion, optimizer, epoch, print_freq):
 
     end = time.time()
     for i, data_dict in enumerate(train_loader):
-        target = data_dict['label']
+        targets1 = data_dict['label']
+        targets = torch.LongTensor([item.numpy() for item in targets1]).cuda()
         input = data_dict['image']
         # measure data loading time
         data_time.update(time.time() - end)
 
-        target = target.cuda()
         input = input.cuda()
 
         # compute output
         output = model(input)
+        # l0 = criterion(output[0], targets[0])
+        # l1 = criterion(output[1], targets[1])
+        # l2 = criterion(output[2], targets[2])
+        # l3 = criterion(output[3], targets[3])
+        # l4 = criterion(output[4], targets[4])
+        # l5 = criterion(output[5], targets[5])
+        # print(targets.device)
+        loss = criterion(output, targets)
+        loss = loss.sum(dim=0) / 6
 
-        loss = criterion(output, target)
 
         # measure accuracy and record loss
-        prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
+        #prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
         losses.update(loss.item(), input.size(0))
-        top1.update(prec1[0], input.size(0))
-        top5.update(prec1[0], input.size(0))
+        #top1.update(prec1[0], input.size(0))
+        #top5.update(prec1[0], input.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

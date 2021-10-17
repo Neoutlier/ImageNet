@@ -113,6 +113,7 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.heads = nn.ModuleList([nn.Linear(512 * block.expansion, num_classes) for i in range(6)])
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -152,9 +153,12 @@ class ResNet(nn.Module):
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
-
-        return x
+        ans = self.heads[0](x).unsqueeze(0)
+        for i in range(1, 6):
+            ans2 = self.heads[i](x).unsqueeze(0)
+            ans = torch.cat((ans, ans2), dim=0)
+        ans = ans.permute(0, 2, 1)
+        return ans
 
 
 def resnet18(pretrained=False, **kwargs):
@@ -204,6 +208,17 @@ def resnet101(pretrained=False, **kwargs):
         model.load_state_dict(torch.load(os.path.join(models_dir, model_name['resnet101'])))
     return model
 
+def load_my_state_dict(self, state_dict):
+    own_state = self.state_dict()
+    for name, param in state_dict.items():
+        if name not in own_state:
+            continue
+        if isinstance(param, nn.Parameter):
+            # backwards compatibility for serialized parameters
+            param = param.data
+    own_state[name].copy_(param)
+    self.load_state_dict(own_state)
+    return self
 
 def resnet152(pretrained=False, **kwargs):
     """Constructs a ResNet-152 model.
@@ -213,5 +228,5 @@ def resnet152(pretrained=False, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(torch.load(os.path.join(models_dir, model_name['resnet152'])))
+        model = load_my_state_dict(model, torch.load(os.path.join(models_dir, model_name['resnet152'])))
     return model

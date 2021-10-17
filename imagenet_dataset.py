@@ -70,7 +70,9 @@ class ImageNetDataset(Dataset):
         self.num = len(lines)
         self.metas = []
         for line in lines:
-            filename, label = line.rstrip().split()
+            items = line.rstrip().split(' ')
+            filename = items[0]
+            label = items[1:]
             self.metas.append({'filename': filename, 'label': label})
 
 
@@ -78,26 +80,12 @@ class ImageNetDataset(Dataset):
         return self.num
 
     def _load_meta(self, idx):
-        if self.use_server:
-            while True:
-                # random select a server ip
-                rdx = np.random.randint(len(self.server_ip))
-                r_ip, r_port = self.server_ip[rdx], self.server_port[rdx]
-                # require meta information
-                try:
-                    meta = requests.get('http://{}:{}/get/{}'.format(r_ip, r_port, idx), timeout=500).json()
-                    break
-                except Exception:
-                    time.sleep(0.005)
-
-            return meta
-        else:
-            return self.metas[idx]
+        return self.metas[idx]
 
     def __getitem__(self, idx):
         curr_meta = self._load_meta(idx)
         filename = osp.join(self.root_dir, curr_meta['filename'])
-        label = int(curr_meta['label'])
+        label = [int(x) for x in curr_meta['label']]
         # add root_dir to filename
         curr_meta['filename'] = filename
         img_bytes = np.fromfile(curr_meta['filename'], dtype=np.uint8)
