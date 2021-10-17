@@ -50,7 +50,7 @@ class ImageNetDataset(Dataset):
     Metafile example::
         "n01440764/n01440764_10026.JPEG 0\n"
     """
-    def __init__(self, root_dir, meta_file, transform=augmentation,
+    def __init__(self, root_dir, meta_file, transform=transforms.Compose(augmentation),
                  read_from='mc', evaluator=None, image_reader_type='pil',
                  server_cfg={}):
 
@@ -100,7 +100,7 @@ class ImageNetDataset(Dataset):
         label = int(curr_meta['label'])
         # add root_dir to filename
         curr_meta['filename'] = filename
-        img_bytes = self.read_file(curr_meta)
+        img_bytes = np.fromfile(curr_meta['filename'], dtype=np.uint8)
         img = self.image_reader(img_bytes, filename)
 
         if self.transform is not None:

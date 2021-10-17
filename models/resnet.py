@@ -13,7 +13,7 @@ __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152
 #     'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
 #     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 # }
-models_dir = os.path.expanduser('~/.torch/models')
+models_dir = ('./models')
 model_name = {
     'resnet18': 'resnet18-5c106cde.pth',
     'resnet34': 'resnet34-333f7ec4.pth',

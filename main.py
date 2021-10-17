@@ -28,8 +28,8 @@ parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='numer of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful to restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int, metavar='N',
-                    help='mini-batch size (default: 256)')
+parser.add_argument('-b', '--batch-size', default=32, type=int, metavar='N',
+                    help='mini-batch size (default: 32)')
 parser.add_argument('--lr', '--learning-rate', default=0.01, type=float, metavar='LR',
                     help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -125,8 +125,8 @@ def main():
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint['epoch']))
-    else:
-        print("=> no checkpoint found at '{}'".format(args.resume))
+        else:
+            print("=> no checkpoint found at '{}'".format(args.resume))
 
     # cudnn.benchmark = True
 
@@ -173,7 +173,9 @@ def train(train_loader, model, criterion, optimizer, epoch, print_freq):
     model.train()
 
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    for i, data_dict in enumerate(train_loader):
+        target = data_dict['label']
+        input = data_dict['image']
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -221,7 +223,9 @@ def validate(val_loader, model, criterion, print_freq):
     model.eval()
 
     end = time.time()
-    for i, (input, target) in enumerate(val_loader):
+    for i, data_dict in enumerate(val_loader):
+        target = data_dict['label']
+        input = data_dict['image']
         target = target.cuda()
         input = input.cuda()
         with torch.no_grad():
