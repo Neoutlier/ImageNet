@@ -8,8 +8,9 @@ import torch.optim as optim
 import torch.utils.data
 
 from models import *
-from data_loader import data_loader
+from imagenet_dataset import ImageNetDataset
 from helper import AverageMeter, save_checkpoint, accuracy, adjust_learning_rate
+from torch.utils.data import DataLoader
 
 model_names = [
     'alexnet', 'squeezenet1_0', 'squeezenet1_1', 'densenet121',
@@ -130,7 +131,10 @@ def main():
     # cudnn.benchmark = True
 
     # Data loading
-    train_loader, val_loader = data_loader(args.data, args.batch_size, args.workers, args.pin_memory)
+    train_dataset = ImageNetDataset(args.data + '/img', args.data + '/train_0.txt')
+    val_dataset = ImageNetDataset(args.data + '/img', args.data + '/val_0.txt')
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
     if args.evaluate:
         validate(val_loader, model, criterion, args.print_freq)
@@ -173,11 +177,12 @@ def train(train_loader, model, criterion, optimizer, epoch, print_freq):
         # measure data loading time
         data_time.update(time.time() - end)
 
-        target = target.cuda(async=True)
-        input = input.cuda(async=True)
+        target = target.cuda()
+        input = input.cuda()
 
         # compute output
         output = model(input)
+
         loss = criterion(output, target)
 
         # measure accuracy and record loss
@@ -217,8 +222,8 @@ def validate(val_loader, model, criterion, print_freq):
 
     end = time.time()
     for i, (input, target) in enumerate(val_loader):
-        target = target.cuda(async=True)
-        input = input.cuda(async=True)
+        target = target.cuda()
+        input = input.cuda()
         with torch.no_grad():
             # compute output
             output = model(input)
