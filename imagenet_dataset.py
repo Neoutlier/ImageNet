@@ -50,7 +50,7 @@ class ImageNetDataset(Dataset):
     Metafile example::
         "n01440764/n01440764_10026.JPEG 0\n"
     """
-    def __init__(self, root_dir, meta_file, transform=transforms.Compose(augmentation),
+    def __init__(self, root_dir, meta_file, train=True, transform=transforms.Compose(augmentation),
                  read_from='mc', evaluator=None, image_reader_type='pil',
                  server_cfg={}):
 
@@ -62,18 +62,28 @@ class ImageNetDataset(Dataset):
         self.image_reader = pil_loader
         self.initialized = False
         self.use_server = False
+        self.train = train
 
         # read from local file
         with open(meta_file) as f:
             lines = f.readlines()
 
-        self.num = len(lines)
-        self.metas = []
-        for line in lines:
-            items = line.rstrip().split(' ')
-            filename = items[0]
-            label = items[1:]
-            self.metas.append({'filename': filename, 'label': label})
+        if train:
+            self.num = len(lines)
+            self.metas = []
+            for line in lines:
+                items = line.rstrip().split(' ')
+                filename = items[0]
+                label = items[1:]
+                self.metas.append({'filename': filename, 'label': label})
+        else:
+            self.num = len(lines)
+            self.metas = []
+            for line in lines:
+                items = line.rstrip().split(' ')
+                filename = items[0]
+                self.metas.append({'filename': filename, 'label': []})
+
 
 
     def __len__(self):

@@ -6,11 +6,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
+import numpy as np
 
 from models import *
 from imagenet_dataset import ImageNetDataset
 from helper import AverageMeter, save_checkpoint, accuracy, adjust_learning_rate
 from torch.utils.data import DataLoader
+from datetime import datetime
 
 model_names = [
     'alexnet', 'squeezenet1_0', 'squeezenet1_1', 'densenet121',
@@ -132,13 +134,15 @@ def main():
 
     # Data loading
     train_dataset = ImageNetDataset(args.data + '/img', args.data + '/train_all.txt')
-    #val_dataset = ImageNetDataset(args.data + '/img', args.data + '/val_0.txt')
+    #val_dataset = ImageNetDataset(args.data + '/img', args.data + '/test.txt')
+    test_dataset = ImageNetDataset(args.data + '/img', args.data + '/test.txt', train=False)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
     #val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
+    eval_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
 
-    # if args.evaluate:
-    #     validate(val_loader, model, criterion, args.print_freq)
-    #     return
+    if args.evaluate:
+         evaluate(eval_loader, model, criterion, args.print_freq)
+         return
 
     for epoch in range(args.start_epoch, args.epochs):
         adjust_learning_rate(optimizer, epoch, args.lr)
@@ -196,8 +200,8 @@ def train(train_loader, model, criterion, optimizer, epoch, print_freq):
 
 
         # measure accuracy and record loss
-        #prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))
+        prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
+        #losses.update(loss.item(), input.size(0))
         #top1.update(prec1[0], input.size(0))
         #top5.update(prec1[0], input.size(0))
 
@@ -263,6 +267,30 @@ def validate(val_loader, model, criterion, print_freq):
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'.format(top1=top1, top5=top5))
 
     return top1.avg, top5.avg
+
+def evaluate(eval_loader, model, criterion, print_freq):
+
+    # switch to evaluate mode
+    model.eval()
+    fn = datetime.now().strftime('%m-%d-%H:%M:%S')
+    f = open('./res_{}.txt'.format(fn), 'w')
+    for i, data_dict in enumerate(eval_loader):
+        input = data_dict['image']
+        input = input.cuda()
+        with torch.no_grad():
+            # compute output
+            output = model(input)
+            _, pred = torch.topk(output, 1, 1, largest=True, sorted=True)
+            pred = np.array(pred.squeeze())
+            for res in pred:
+                printstr = ''
+                for res_single in res:
+                    printstr += str(res_single)
+                printstr.rstrip(' ')
+                printstr += '\n'
+                f.write(printstr)
+    f.close()
+    return
 
 
 if __name__ == '__main__':
