@@ -193,7 +193,7 @@ def resnet50(pretrained=False, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        model.load_state_dict(torch.load(os.path.join(models_dir, model_name['resnet50'])))
+        model = load_my_state_dict(model, torch.load(os.path.join(models_dir, model_name['resnet50'])))
     return model
 
 
