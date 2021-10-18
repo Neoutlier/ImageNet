@@ -22,7 +22,8 @@ test_augmentation = [
     normalize,
 ]
 train_augmentation = [
-    transforms.RandomResizedCrop(224, (0.8, 1.0)),
+    #transforms.RandomResizedCrop(224, (0.8, 1.0)),
+    transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     normalize,
@@ -105,7 +106,7 @@ class ImageNetDataset(Dataset):
         # add root_dir to filename
         curr_meta['filename'] = filename
         img_bytes = np.fromfile(curr_meta['filename'], dtype=np.uint8)
-        img = self.image_reader(img_bytes, filename, bbox_dict[curr_meta['filename']])
+        img = self.image_reader(img_bytes, filename, bbox_dict[curr_meta['filename'].split('/')[-1]])
 
         if self.transform is not None:
             img = self.transform(img)

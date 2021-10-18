@@ -114,8 +114,7 @@ def main():
 
     # define loss and optimizer
     criterion = FocalLoss().cuda()
-    optimizer = optim.Adam(model.parameters(), lr=args.lr,
-                          weight_decay=args.weight_decay)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     # optionlly resume from a checkpoint
     if args.resume:
@@ -145,7 +144,7 @@ def main():
          return
 
     for epoch in range(args.start_epoch, args.epochs):
-        adjust_learning_rate(optimizer, epoch, args.lr)
+        #adjust_learning_rate(optimizer, epoch, args.lr)
 
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args.print_freq)
@@ -196,7 +195,6 @@ def train(train_loader, model, criterion, optimizer, epoch, print_freq):
         # l5 = criterion(output[5], targets[5])
         # print(targets.device)
         loss = criterion(output, targets)
-        loss = loss.sum(dim=0) / 6
 
 
         # measure accuracy and record loss
