@@ -26,17 +26,17 @@ parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('data', metavar='DIR', help='path to dataset')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='alexnet', choices=model_names,
                     help='model architecture: ' + ' | '.join(model_names) + ' (default: alexnet)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=10, type=int, metavar='N',
                     help='numer of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful to restarts)')
-parser.add_argument('-b', '--batch-size', default=32, type=int, metavar='N',
-                    help='mini-batch size (default: 32)')
-parser.add_argument('--lr', '--learning-rate', default=0.01, type=float, metavar='LR',
+parser.add_argument('-b', '--batch-size', default=64, type=int, metavar='N',
+                    help='mini-batch size (default: 64)')
+parser.add_argument('--lr', '--learning-rate', default=1e-4, type=float, metavar='LR',
                     help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
-parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
+parser.add_argument('--weight-decay', '--wd', default=1e-5, type=float,
                     metavar='W', help='Weight decay (default: 1e-4)')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
@@ -113,8 +113,7 @@ def main():
 
     # define loss and optimizer
     criterion = nn.CrossEntropyLoss().cuda()
-    optimizer = optim.SGD(model.parameters(), lr=args.lr,
-                          momentum=args.momentum,
+    optimizer = optim.Adam(model.parameters(), lr=args.lr,
                           weight_decay=args.weight_decay)
 
     # optionlly resume from a checkpoint
@@ -273,8 +272,8 @@ def evaluate(eval_loader, model, criterion, print_freq):
     # switch to evaluate mode
     model.eval()
     fn = datetime.now().strftime('%m-%d-%H:%M:%S')
-    fn = 'test'
-    f = open('./res_{}.txt'.format(fn), 'w')
+    fn = 'predict'
+    f = open('./{}.txt'.format(fn), 'w')
     for i, data_dict in enumerate(eval_loader):
         input = data_dict['image']
         input = input.cuda()
