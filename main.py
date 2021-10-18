@@ -13,6 +13,7 @@ from imagenet_dataset import ImageNetDataset
 from helper import AverageMeter, save_checkpoint, accuracy, adjust_learning_rate
 from torch.utils.data import DataLoader
 from datetime import datetime
+from focalloss import FocalLoss
 
 model_names = [
     'alexnet', 'squeezenet1_0', 'squeezenet1_1', 'densenet121',
@@ -112,7 +113,7 @@ def main():
     # model = torch.nn.parallel.DistributedDataParallel(model)
 
     # define loss and optimizer
-    criterion = nn.CrossEntropyLoss().cuda()
+    criterion = FocalLoss().cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.lr,
                           weight_decay=args.weight_decay)
 

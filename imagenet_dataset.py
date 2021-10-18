@@ -22,7 +22,7 @@ test_augmentation = [
     normalize,
 ]
 train_augmentation = [
-    transforms.RandomResizedCrop(224, (0.5, 1.0)),
+    transforms.RandomResizedCrop(224, (0.8, 1.0)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     normalize,
