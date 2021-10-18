@@ -273,6 +273,7 @@ def evaluate(eval_loader, model, criterion, print_freq):
     # switch to evaluate mode
     model.eval()
     fn = datetime.now().strftime('%m-%d-%H:%M:%S')
+    fn = 'test'
     f = open('./res_{}.txt'.format(fn), 'w')
     for i, data_dict in enumerate(eval_loader):
         input = data_dict['image']
@@ -281,11 +282,12 @@ def evaluate(eval_loader, model, criterion, print_freq):
             # compute output
             output = model(input)
             _, pred = torch.topk(output, 1, 1, largest=True, sorted=True)
-            pred = np.array(pred.squeeze())
+            pred = np.array(pred.squeeze().cpu())
+            pred = np.swapaxes(pred, 0, 1)
             for res in pred:
                 printstr = ''
                 for res_single in res:
-                    printstr += str(res_single)
+                    printstr += str(res_single) + ' '
                 printstr.rstrip(' ')
                 printstr += '\n'
                 f.write(printstr)
