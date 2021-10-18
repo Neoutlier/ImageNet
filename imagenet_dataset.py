@@ -22,8 +22,8 @@ augmentation = [
     normalize,
 ]
 augmentation = [
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
+    transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
+    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     normalize,
 ]
