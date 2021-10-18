@@ -1,7 +1,5 @@
 import os.path as osp
 import json
-import requests
-import time
 import numpy as np
 import io
 from PIL import Image
