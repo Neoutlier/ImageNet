@@ -21,6 +21,12 @@ augmentation = [
     transforms.ToTensor(),
     normalize,
 ]
+augmentation = [
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    normalize,
+]
 
 def pil_loader(img_bytes, filepath):
     buff = io.BytesIO(img_bytes)
