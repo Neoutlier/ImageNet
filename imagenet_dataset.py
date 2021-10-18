@@ -5,8 +5,10 @@ import io
 from PIL import Image
 import logging
 from torch.utils.data import Dataset
+import pickle
 
 logger = logging.getLogger('global')
+bbox_dict = pickle.load(open('bbox_dict.pkl', 'rb'))
 
 import random
 import torch
@@ -14,25 +16,24 @@ from torchvision import transforms
 
 normalize = transforms.Normalize(
     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-augmentation = [
-    transforms.RandomResizedCrop(224),
-    transforms.RandomHorizontalFlip(),
-    transforms.ColorJitter(0.2, 0.2, 0.2, 0.1),
+test_augmentation = [
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     normalize,
 ]
-augmentation = [
-    transforms.Resize(224),
+train_augmentation = [
+    transforms.RandomResizedCrop(224, (0.5, 1.0)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     normalize,
 ]
 
-def pil_loader(img_bytes, filepath):
+def pil_loader(img_bytes, filepath, bbox):
     buff = io.BytesIO(img_bytes)
     try:
         with Image.open(buff) as img:
             img = img.convert('RGB')
+            img = img.crop(bbox)
     except IOError:
         logger.info('Failed in loading {}'.format(filepath))
     return img
@@ -54,7 +55,7 @@ class ImageNetDataset(Dataset):
     Metafile example::
         "n01440764/n01440764_10026.JPEG 0\n"
     """
-    def __init__(self, root_dir, meta_file, train=True, transform=transforms.Compose(augmentation),
+    def __init__(self, root_dir, meta_file, train=True, transform=transforms.Compose(test_augmentation),
                  read_from='mc', evaluator=None, image_reader_type='pil',
                  server_cfg={}):
 
@@ -73,6 +74,7 @@ class ImageNetDataset(Dataset):
             lines = f.readlines()
 
         if train:
+            self.transform = transforms.Compose(train_augmentation)
             self.num = len(lines)
             self.metas = []
             for line in lines:
@@ -103,7 +105,7 @@ class ImageNetDataset(Dataset):
         # add root_dir to filename
         curr_meta['filename'] = filename
         img_bytes = np.fromfile(curr_meta['filename'], dtype=np.uint8)
-        img = self.image_reader(img_bytes, filename)
+        img = self.image_reader(img_bytes, filename, bbox_dict[curr_meta['filename']])
 
         if self.transform is not None:
             img = self.transform(img)

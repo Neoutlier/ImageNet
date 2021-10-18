@@ -272,7 +272,7 @@ def evaluate(eval_loader, model, criterion, print_freq):
     # switch to evaluate mode
     model.eval()
     fn = datetime.now().strftime('%m-%d-%H:%M:%S')
-    fn = 'predict'
+    fn = 'prediction'
     f = open('./{}.txt'.format(fn), 'w')
     for i, data_dict in enumerate(eval_loader):
         input = data_dict['image']
